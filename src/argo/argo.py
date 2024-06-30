@@ -27,7 +27,7 @@ class AntibioticResistanceGeneProfiler:
         self.assignments = {}
 
         ## genome copies
-        self.lineage2genome = dict()
+        self.lineage2genome = {}
         with open(f'{self.outfile}.tsv') as f:
             next(f)
             for line in f:
@@ -164,7 +164,7 @@ class AntibioticResistanceGeneProfiler:
 
         with open(f'{self.outfile}.sarg.minimap.tmp', 'w') as w:
             with logging_redirect_tqdm():
-                bar_format='==> {desc}{percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt} [{elapsed}<{remaining}]'
+                bar_format = '==> {desc}{percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt} [{elapsed}<{remaining}]'
                 queue = tqdm(qseqids.items(), bar_format=bar_format, leave=False)
                 for family, qseqid in queue:
                     queue.set_description(f'Processing <{family}>')
@@ -194,7 +194,7 @@ class AntibioticResistanceGeneProfiler:
             qcoords[hit[0]].add(tuple(hit[3:5]))
 
         alignments = []
-        scores, max_scores = defaultdict(dict), dict()
+        scores, max_scores = defaultdict(dict), {}
         with open(f'{self.outfile}.sarg.minimap.tmp') as f:
             for line in f:
                 ls = line.rstrip().split('\t')
@@ -225,7 +225,7 @@ class AntibioticResistanceGeneProfiler:
         node2index = {node: index for index, node in enumerate(nodes)}
         matrix = dok_matrix((len(nodes), len(nodes)))
 
-        identities = dict()
+        identities = {}
         for overlap in self.overlaps:
             if (row := node2index.get(overlap[0])) and (col := node2index.get(overlap[1])):
                 identities[(row, col)] = identities[(col, row)] = max(1 - overlap[-1], identities.get((row, col), 0), identities.get((col, row), 0))
@@ -236,7 +236,7 @@ class AntibioticResistanceGeneProfiler:
         clusters = mcl(matrix, max_iterations=max_iterations, inflation=inflation, expansion=expansion)
         index2label = {index: label for label, indexes in enumerate(clusters) for index in indexes}
         labels = np.array([index2label.get(index) for index in range(len(nodes))])
-        self.clusters = [nodes[labels==label] for label in np.unique(labels)[::-1]]
+        self.clusters = [nodes[labels == label] for label in np.unique(labels)[::-1]]
 
     def run_set_cover(self):
         '''
@@ -258,10 +258,10 @@ class AntibioticResistanceGeneProfiler:
                     scores[alignment[-1]][alignment[0]] = alignment[2]
 
             ## get covers
-            qseqid2lineage = dict()
+            qseqid2lineage = {}
             if covers := set_cover(elements, subsets, scores):
                 if len(covers) > 1:
-                    score = dict()
+                    score = {}
                     for qseqid in set.union(*[subsets[cover] for cover in covers]):
                         for cover in covers:
                             AS = scores[cover].get(qseqid, -np.inf)
@@ -310,7 +310,7 @@ class AntibioticResistanceGeneProfiler:
                         merged_coordinates.append(list(coordinate))
 
                 ## discard hits they together < subject cover cutoff
-                if sum([coordinate[1] - coordinate[0] for coordinate in merged_coordinates]) / sseqid[1] < subject_cover / 100:
+                if sum(coordinate[1] - coordinate[0] for coordinate in merged_coordinates) / sseqid[1] < subject_cover / 100:
                     discarded_sseqids.add(sseqid[0])
 
             sseqids = {sseqid[0] for sseqid in merged_scovs.keys()} - discarded_sseqids
@@ -352,6 +352,9 @@ class AntibioticResistanceGeneProfiler:
             secondary_num=2147483647, secondary_ratio=0.9,
             min_genome_copies=1, chunk_size=0,
             max_iterations=1000, inflation=2, expansion=2):
+        '''
+        Run the pipeline.
+        '''
         self.debug = debug
 
         ## initial overlapping
@@ -380,7 +383,7 @@ class AntibioticResistanceGeneProfiler:
         logger.info('Set covering ...')
         self.parse_minimap()
         self.run_set_cover()
-        
+
         ## postprocessing
         reads = {hit[0]: {'remark': 'ARG-containing'} for hit in self.hits}
         lineage2copy = defaultdict(lambda: 0)

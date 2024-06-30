@@ -229,7 +229,7 @@ def run(opt):
         files = [os.path.basename(file) for file in glob.glob(os.path.join(opt.db, '*'))]
         if (
             'metadata.tsv' not in files or 'sarg.metadata.tsv' not in files
-            or 'prot.dmnd' not in files  or 'sarg.dmnd' not in files 
+            or 'prot.dmnd' not in files  or 'sarg.dmnd' not in files
             or len([file for file in files if 'nucl' in file and '.mmi' in file]) != 16
             or len([file for file in files if 'sarg' in file and '.mmi' in file]) != 43
         ):

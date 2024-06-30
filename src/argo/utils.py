@@ -66,7 +66,7 @@ def set_cover(elements, subsets, scores):
         for key in keys:
             if not (subset := subsets[key].intersection(elements)):
                 continue
-        
+
             cost = sum(-score for id, score in scores[key].items() if id in subset)
             if cost < min_cost:
                 min_cost, min_index = cost, key
