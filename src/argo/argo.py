@@ -60,6 +60,9 @@ class AntibioticResistanceGeneProfiler:
 
         extract_sequence(self.file, qseqid, f'{self.outfile}.sarg.sequence.tmp')
         if nchunks > 1:
+            for file in glob.glob(f'{self.outfile}.sarg.sequence.part*.tmp'):
+                os.remove(file)
+
             subprocess.run([
                 'seqkit', 'split', '-p', str(nchunks), '--out-dir', self.output,
                 f'{self.outfile}.sarg.sequence.tmp'
@@ -239,7 +242,7 @@ class AntibioticResistanceGeneProfiler:
         labels = np.array([index2label.get(index) for index in range(len(nodes))])
         self.clusters = [nodes[labels == label] for label in np.unique(labels)[::-1]]
 
-    def run_set_cover(self):
+    def run_sc(self):
         '''
         Taxonomic assignments for each cluster with set cover.
         '''
@@ -383,7 +386,7 @@ class AntibioticResistanceGeneProfiler:
         ## parse taxonomic assignments then reassign with set cover
         logger.info('Set covering ...')
         self.parse_minimap()
-        self.run_set_cover()
+        self.run_sc()
 
         ## postprocessing
         reads = {hit[0]: {'remark': 'ARG-containing'} for hit in self.hits}
