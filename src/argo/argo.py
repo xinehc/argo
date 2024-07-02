@@ -84,7 +84,7 @@ class AntibioticResistanceGeneProfiler:
                 overlaps = filter_overlap(f'{self.outfile}.init.overlap.tmp')
 
                 ## default initial identity cutoff: 0.9 * (90 - 2.5 * median sequence divergence %)
-                DV = np.median([overlap[-1] for overlap in overlaps])
+                DV = np.median(np.fromiter((x[-1] for x in overlaps), dtype=float))
                 self.identity = 0.9 * 100 * (0.9 - scale * DV)
                 logger.info(
                     f'... median sequence divergence: {DV:.4f}'
@@ -99,7 +99,7 @@ class AntibioticResistanceGeneProfiler:
             self.overlaps = filter_overlap(f'{self.outfile}.sarg.overlap.tmp')
 
             ## filter out overlaps if divergence is higher than 2.5 * median sequence divergence
-            DV = np.median([overlap[-1] for overlap in self.overlaps])
+            DV = np.median(np.fromiter((x[-1] for x in self.overlaps), dtype=float))
             self.overlaps = [overlap for overlap in self.overlaps if overlap[-1] <= max(scale * DV, 0.01)]
 
             if identity == 0:
@@ -226,12 +226,13 @@ class AntibioticResistanceGeneProfiler:
         matrix = dok_matrix((len(nodes), len(nodes)))
 
         identities = {}
-        for overlap in self.overlaps:
+        while self.overlaps:
+            overlap = self.overlaps.pop()
             if (row := node2index.get(overlap[0])) and (col := node2index.get(overlap[1])):
                 identities[(row, col)] = identities[(col, row)] = max(1 - overlap[-1], identities.get((row, col), 0), identities.get((col, row), 0))
 
-        rows, cols = zip(*identities.keys())
-        matrix[rows, cols] = list(identities.values())
+        matrix[*zip(*identities.keys())] = list(identities.values())
+        del self.overlaps, identities
 
         clusters = mcl(matrix, max_iterations=max_iterations, inflation=inflation, expansion=expansion)
         index2label = {index: label for label, indexes in enumerate(clusters) for index in indexes}

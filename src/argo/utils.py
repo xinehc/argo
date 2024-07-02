@@ -38,7 +38,7 @@ def filter_overlap(file, max_hang=1000, int_frac=0.05):
             maplen = max(qend - qstart, send - sstart)
 
             if overhang <= min(max_hang, maplen * int_frac):
-                overlaps.append([qseqid, sseqid, DV])
+                overlaps.append((qseqid, sseqid, DV))
 
     return overlaps
 
