@@ -389,7 +389,7 @@ class AntibioticResistanceGeneProfiler:
         self.run_sc()
 
         ## postprocessing
-        reads = {hit[0]: {'remark': 'ARG-containing'} for hit in self.hits}
+        reads = {hit[0]: {'remark': 'ARG-containing', 'hit': []} for hit in self.hits}
         lineage2copy = defaultdict(lambda: 0)
         for hit in self.hits:
             lineage = self.assignments.get(hit[0])
@@ -399,7 +399,9 @@ class AntibioticResistanceGeneProfiler:
             else:
                 lineage = lineage.split('@')[0]
             reads[hit[0]]['lineage'] = lineage
-            reads[hit[0]]['carrier'] = carrier
+            reads[hit[0]]['plasmid'] = True if carrier == 'plasmid' else False
+
+            reads[hit[0]]['hit'].append(hit[1].split('|', 1)[-1])
             lineage2copy[(lineage, *re.sub('@[A-Z]+', '', hit[1].replace('_', ' ')).split('|')[1:3], carrier)] += hit[-1]
 
         self.profile = []
