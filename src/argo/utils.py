@@ -103,12 +103,13 @@ def iterate(matrix, inflation, expansion, pruning_threshold):
     matrix = sparse_normalize((matrix ** expansion).power(inflation))
 
     ## prune entries with small values
+    submatrix = matrix > pruning_threshold
     matrix_pruned = dok_matrix(matrix.shape)
-    matrix_pruned[matrix >= pruning_threshold] = matrix[matrix >= pruning_threshold]
+    matrix_pruned[submatrix] = matrix[submatrix]
 
-    row_indices = matrix.argmax(axis=0).reshape((matrix.shape[0], ))
-    col_indices = np.arange(matrix.shape[0])
-    matrix_pruned[row_indices, col_indices] = matrix[row_indices, col_indices]
+    row = matrix.argmax(axis=0).reshape((matrix.shape[0], ))
+    col = np.arange(matrix.shape[0])
+    matrix_pruned[row, col] = matrix[row, col]
 
     return matrix_pruned.tocsc()
 
@@ -130,12 +131,12 @@ def mcl(matrix, max_iterations=1000, inflation=2, expansion=2):
         clusters: list
             List of clusters
     '''
-    ## Add self-loops to the matrix
-    for i in range(matrix.shape[0]):
-        matrix[i, i] = 1
+    ## add self-loops to the matrix
+    for index in range(matrix.shape[0]):
+        matrix[index, index] = 1
 
     matrix = sparse_normalize(matrix)
-    for i in range(max_iterations):
+    for iteration in range(max_iterations):
         matrix_hist = matrix.copy()
 
         ## expansion + inflation + prune
