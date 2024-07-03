@@ -281,7 +281,7 @@ class AntibioticResistanceGeneProfiler:
             ## check if over 90% reads of a species are labelled with plasmids
             for cover in set(qseqid2lineage.values()):
                 qseqids = [qseqid in plasmid_qseqids for qseqid in {qseqid for qseqid, lineage in qseqid2lineage.items() if lineage == cover}]
-                if sum(qseqids) / len(qseqids) > 0.9:
+                if sum(qseqids) / len(qseqids) > 0.5:
                     plasmid_lineages.add(cover)
 
             self.assignments.update({qseqid: (f'{lineage}@plasmid' if lineage in plasmid_lineages else lineage) for qseqid, lineage in qseqid2lineage.items()})
