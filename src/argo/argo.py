@@ -103,7 +103,7 @@ class AntibioticResistanceGeneProfiler:
 
             ## filter out overlaps if divergence is higher than 2.5 * median sequence divergence
             DV = np.median(np.fromiter((x[-1] for x in self.overlaps), dtype=float))
-            self.overlaps = [overlap for overlap in self.overlaps if overlap[-1] <= max(scale * DV, 0.01)]
+            self.overlaps = [overlap for overlap in self.overlaps if overlap[-1] <= max(scale * DV, 0.05)]
 
             if identity == 0:
                 ## update identity cutoff if necessary
