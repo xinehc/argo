@@ -254,7 +254,7 @@ class AntibioticResistanceGeneProfiler:
             scores = defaultdict(lambda: defaultdict(dict))
             plasmid_qseqids, plasmid_lineages = set(), set()
             alignments = [alignment for alignment in self.alignments if alignment[0] in elements]
-            for alignment in sorted(alignments, key=lambda alignment: (alignment[-1] not in self.lineage2genome, alignment[-1])):
+            for alignment in sorted(alignments, key=lambda alignment: (self.lineage2genome.get(alignment[-1], 0), alignment[-1]), reverse=True):
                 if alignment[-1] == 'plasmid':
                     plasmid_qseqids.add(alignment[0])
                 else:
@@ -351,7 +351,7 @@ class AntibioticResistanceGeneProfiler:
 
         self.hits = hits
 
-    def run(self, debug=False, skip_clean=False,
+    def run(self, debug=False, plasmid=False, skip_clean=False,
             max_target_seqs=25, evalue=1e-5, identity=0, subject_cover=90,
             secondary_num=2147483647, secondary_ratio=0.9,
             min_genome_copies=1, chunk_size=0,
@@ -394,7 +394,7 @@ class AntibioticResistanceGeneProfiler:
         for hit in self.hits:
             lineage = self.assignments.get(hit[0])
             carrier = 'plasmid' if '@plasmid' in lineage else 'chromosome'
-            if self.lineage2genome.get(lineage.split('@')[0], -np.inf) < min_genome_copies:
+            if self.lineage2genome.get(lineage.split('@')[0], -np.inf) < min_genome_copies or not plasmid:
                 lineage = 'unclassified'
             else:
                 lineage = lineage.split('@')[0]

@@ -53,6 +53,11 @@ def cli(argv=sys.argv):
         help='Unzipped kraken2 database for pre-filtering of non-prokaryotic reads. Skip if not given.')
 
     optional.add_argument(
+        '--plasmid',
+        action='store_true',
+        help='Assign taxonomic labels to plasmid-borne ARGs to their most likely hosts.')
+
+    optional.add_argument(
         '--skip-clean',
         action='store_true',
         help='Skip cleaning, keep all temporary <*.tmp> files.')
@@ -266,7 +271,7 @@ def run(opt):
             max_iterations=opt.a, epsilon=opt.c)
 
         AntibioticResistanceGeneProfiler(file, opt.db, opt.output, opt.threads).run(
-            skip_clean=opt.skip_clean,
+            plasmid=opt.plasmid, skip_clean=opt.skip_clean,
             max_target_seqs=opt.M, evalue=opt.E, identity=opt.I, subject_cover=opt.S,
             secondary_num=opt.N, secondary_ratio=opt.P,
             min_genome_copies=opt.z, chunk_size=opt.u,
