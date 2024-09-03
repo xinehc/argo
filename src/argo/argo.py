@@ -278,7 +278,7 @@ class AntibioticResistanceGeneProfiler:
             ## update for remaining elements
             qseqid2lineage.update({qseqid: 'unclassified' for qseqid in elements})
 
-            ## check if over 90% reads of a species are labelled with plasmids
+            ## check if over 50% reads of a species are labelled with plasmids
             for cover in set(qseqid2lineage.values()):
                 qseqids = [qseqid in plasmid_qseqids for qseqid in {qseqid for qseqid, lineage in qseqid2lineage.items() if lineage == cover}]
                 if sum(qseqids) / len(qseqids) > 0.5:
@@ -394,7 +394,7 @@ class AntibioticResistanceGeneProfiler:
         for hit in self.hits:
             lineage = self.assignments.get(hit[0])
             carrier = 'plasmid' if '@plasmid' in lineage else 'chromosome'
-            if self.lineage2genome.get(lineage.split('@')[0], -np.inf) < min_genome_copies or not plasmid:
+            if self.lineage2genome.get(lineage.split('@')[0], -np.inf) < min_genome_copies or (carrier == 'plasmid' and not plasmid):
                 lineage = 'unclassified'
             else:
                 lineage = lineage.split('@')[0]
