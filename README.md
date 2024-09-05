@@ -35,7 +35,7 @@ rm -rf database/*.fa
 
 ### Run Argo
 > [!NOTE]
-> Argo by default does not assign taxonomic labels to **plasmid reads** as plasmids may potentially be carried by more than one hosts. `--plasmid` forces classification by assigning ARG-containing plasmid reads to their most likely lineages (based on relative abundance), but interpretation requires caution.
+> Argo by default does not assign taxonomic labels to **plasmid reads** since plasmids can have multiple hosts (for example [NZ_OW968330.1](https://www.ncbi.nlm.nih.gov/nuccore/NZ_OW968330.1)). `--plasmid` forces taxonomic classification of these reads by assigning them to their "most likely" lineages (ties resolved based on the estimated genome copies of species within a sample), but interpretation requires caution.
 
 We provide an example file comprising 10,000 quality-controlled (processed with `Porechop` and `nanoq`) prokaryotic reads (fungal and other reads removed with `minimap2`), randomly selected from the R10.3 mock sample of [Loman Lab Mock Community Experiments](https://lomanlab.github.io/mockcommunity/r10.html).
 ```bash
@@ -55,7 +55,7 @@ INFO: ... median sequence divergence: 0.0519 | initial identity cutoff: 0.9 * 77
 INFO: Annotating ARGs ...
 INFO: ... candidate HSPs: 11094 | ARG-containing reads: 627.
 INFO: Overlapping of ARG-containing reads ...
-INFO: ... median sequence divergence of ARG-containing reads: 0.0504 | identity cutoff: 77.40 | low-identity HSPs: 
+INFO: ... median sequence divergence of ARG-containing reads: 0.0504 | identity cutoff: 77.40 | low-identity HSPs: 3511.
 INFO: Assigning taxonomy ...
 INFO: Graph clustering ...
 INFO: ... read clusters: 168 | low-subject-cover HSPs: 525 | overlapping HSPs: 6200 | remaining HSPs: 858
@@ -77,7 +77,7 @@ lineage                     type            subtype    carrier       copy      g
 ...
 ```
 
-Output file `example.sarg.json` contains detailed annotation information for reads:
+Output file `example.sarg.json` contains detailed annotation information for ARG-containing reads:
 ```
 {
     ...
