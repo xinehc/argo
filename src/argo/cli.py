@@ -53,6 +53,13 @@ def cli(argv=sys.argv):
         help='Unzipped kraken2 database for pre-filtering of non-prokaryotic reads. Skip if not given.')
 
     optional.add_argument(
+        '--preset',
+        type=str,
+        default='auto',
+        choices=['lq', 'hq', 'auto'],
+        help='Preset of minimap2. If "auto" then set based on median sequence divergence: <0.01 "hq" (lr:hq); ≥0.01 "lq" (map-ont). [auto]')
+
+    optional.add_argument(
         '--plasmid',
         action='store_true',
         help='Assign taxonomic labels to plasmid-borne ARGs to their most likely hosts.')
@@ -137,7 +144,7 @@ def cli(argv=sys.argv):
         metavar='FLOAT',
         type=float,
         default=0,
-        help='Min. identity in percentage to report alignments. If 0 then 90 - 2.5 * median sequence divergence in percentage. [0]')
+        help='Min. identity in percentage to report alignments. If "0" then set 90 - 2.5 * 100 * median sequence divergence. [0]')
 
     additional_arg.add_argument(
         '-S',
@@ -172,7 +179,7 @@ def cli(argv=sys.argv):
         metavar='INT',
         type=int,
         default=0,
-        help='Max. number of ARG-containing reads per chunk for overlapping. If 0 then use a single chunk. [0]')
+        help='Max. number of ARG-containing reads per chunk for overlapping. If "0" then use a single chunk. [0]')
 
     additional_arg.add_argument(
         '-b',
@@ -271,7 +278,7 @@ def run(opt):
             max_iterations=opt.a, epsilon=opt.c)
 
         AntibioticResistanceGeneProfiler(file, opt.db, opt.output, opt.threads).run(
-            plasmid=opt.plasmid, skip_clean=opt.skip_clean,
+            preset=opt.preset, plasmid=opt.plasmid, skip_clean=opt.skip_clean,
             max_target_seqs=opt.M, evalue=opt.E, identity=opt.I, subject_cover=opt.S,
             secondary_num=opt.N, secondary_ratio=opt.P,
             min_genome_copies=opt.z, chunk_size=opt.u,
