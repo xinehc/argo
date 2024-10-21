@@ -242,8 +242,8 @@ def run(opt):
         if (
             'metadata.tsv' not in files or 'sarg.metadata.tsv' not in files
             or 'prot.dmnd' not in files  or 'sarg.dmnd' not in files
-            or len([file for file in files if 'nucl' in file and '.mmi' in file]) != 16
-            or len([file for file in files if 'sarg' in file and '.mmi' in file]) != 43
+            or len([file for file in files if 'nucl.' in file and '.mmi' in file]) != 16
+            or len([file for file in files if 'sarg.' in file and '.mmi' in file]) <= 42
         ):
             logger.critical(f'Database <{opt.db}> is not complete or not indexed.')
             sys.exit(2)
