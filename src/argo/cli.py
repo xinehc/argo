@@ -137,7 +137,7 @@ def cli(argv=sys.argv):
         metavar='FLOAT',
         type=float,
         default=0,
-        help='Min. identity in percentage to report alignments. If 0 then 90 - 2.5 * median sequence divergence in percentage. [0]')
+        help='Min. identity in percentage to report alignments. If "0" then set 90 - 2.5 * 100 * median sequence divergence. [0]')
 
     additional_arg.add_argument(
         '-S',
@@ -172,7 +172,7 @@ def cli(argv=sys.argv):
         metavar='INT',
         type=int,
         default=0,
-        help='Max. number of ARG-containing reads per chunk for overlapping. If 0 then use a single chunk. [0]')
+        help='Max. number of ARG-containing reads per chunk for overlapping. If "0" then use a single chunk. [0]')
 
     additional_arg.add_argument(
         '-b',
@@ -235,8 +235,8 @@ def run(opt):
         if (
             'metadata.tsv' not in files or 'sarg.metadata.tsv' not in files
             or 'prot.dmnd' not in files  or 'sarg.dmnd' not in files
-            or len([file for file in files if 'nucl' in file and '.mmi' in file]) != 16
-            or len([file for file in files if 'sarg' in file and '.mmi' in file]) != 43
+            or len([file for file in files if 'nucl.' in file and '.mmi' in file]) != 16
+            or len([file for file in files if 'sarg.' in file and '.mmi' in file]) <= 42
         ):
             logger.critical(f'Database <{opt.db}> is not complete or not indexed.')
             sys.exit(2)
