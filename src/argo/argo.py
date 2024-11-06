@@ -72,7 +72,7 @@ class AntibioticResistanceGeneProfiler:
         with open(f'{self.outfile}.sarg.overlap.tmp', 'w') as w:
             for file in files:
                 subprocess.run([
-                    'minimap2', '-x', 'ava-ont', '-t', str(self.threads),
+                    'minimap2', '-x', 'ava-ont', '-t', str(self.threads), '-I', '1G',
                     file, file
                 ], check=True, stdout=w, stderr=subprocess.DEVNULL)
 
@@ -108,7 +108,7 @@ class AntibioticResistanceGeneProfiler:
             if identity == 0:
                 ## update identity cutoff if necessary
                 self.identity = max(self.identity, 100 * (0.9 - scale * DV))
-                nhits, self.hits = len(self.hits), [hit for hit in self.hits if hit[-2] >= self.identity]
+                nhits, self.hits = len(self.hits), [hit for hit in self.hits if hit[8] >= self.identity]
                 logger.info(
                     f'... median sequence divergence of ARG-containing reads: {DV:.4f}'
                     f' | identity cutoff: {self.identity:.2f}'
@@ -121,7 +121,7 @@ class AntibioticResistanceGeneProfiler:
         '''
         Run diamond blastx.
         '''
-        outfmt = ['qseqid', 'sseqid', 'pident', 'length', 'qlen', 'qstart', 'qend', 'slen', 'sstart', 'send', 'evalue']
+        outfmt = ['qseqid', 'sseqid', 'pident', 'qlen', 'qstart', 'qend', 'slen', 'sstart', 'send', 'evalue', 'bitscore']
         subprocess.run([
             'diamond', 'blastx',
             '--db', os.path.join(self.db, 'sarg.dmnd'),
@@ -143,14 +143,15 @@ class AntibioticResistanceGeneProfiler:
                 ls = line.rstrip().split('\t')
                 qseqid, sseqid = ls[0], ls[1]
                 if qseqid not in self.nset:
-                    qstart, qend = sort_coordinate(int(ls[5]), int(ls[6]))
-                    sstart, send = sort_coordinate(int(ls[8]), int(ls[9]))
-                    qlen, slen = int(ls[4]), int(ls[7])
+                    qstart, qend = sort_coordinate(int(ls[4]), int(ls[5]))
+                    sstart, send = sort_coordinate(int(ls[7]), int(ls[8]))
+                    qlen, slen = int(ls[3]), int(ls[6])
                     scov = (send - sstart) / slen
+                    bitscore = float(ls[10])
 
                     ## append qseqid and coordinates for back-tracing
                     if (pident := float(ls[2])) >= self.identity:
-                        self.hits.append([qseqid, sseqid, qlen, qstart, qend, slen, sstart, send, pident, scov])
+                        self.hits.append([qseqid, sseqid, qlen, qstart, qend, slen, sstart, send, pident, scov, bitscore])
 
         logger.info(
             f'... candidate HSPs: {len(self.hits)}'
@@ -176,7 +177,8 @@ class AntibioticResistanceGeneProfiler:
                         'minimap2',
                         '-cx', 'map-ont',
                         '-f', '0',
-                        '-N', str(secondary_num), '-p', str(secondary_ratio),
+                        '-N', str(secondary_num),
+                        '-p', str(secondary_ratio),
                         '-t', str(self.threads),
                         os.path.join(self.db, f'sarg.{family}.mmi'), '-',
                     ], check=True, stdout=w, stderr=subprocess.DEVNULL, input=sequences, text=True)
@@ -291,8 +293,10 @@ class AntibioticResistanceGeneProfiler:
         Filter low-subject-cover and overlapping hits.
         '''
         scovs = defaultdict(lambda: defaultdict(set))
+        bitscores, merged_bitscores = defaultdict(lambda: defaultdict(lambda: 0)), defaultdict(dict)
         for hit in self.hits:
             scovs[hit[0]][(hit[1], hit[5])].add((hit[6], hit[7]))
+            bitscores[hit[0]][hit[1]] += hit[10]
 
         ## check whether reads collectively cover of a gene sequence
         discarded_hits = defaultdict(set)
@@ -317,13 +321,13 @@ class AntibioticResistanceGeneProfiler:
                 if sum(coordinate[1] - coordinate[0] for coordinate in merged_coordinates) / sseqid[1] < subject_cover / 100:
                     discarded_sseqids.add(sseqid[0])
 
+            ## rank subtypes according to total bitscores
             sseqids = {sseqid[0] for sseqid in merged_scovs.keys()} - discarded_sseqids
-            subtypes = {sseqid.split('|')[2] for sseqid in sseqids}
-
-            ## filter out wildcard subtypes (*) if necessary
-            if any('*' in subtype for subtype in subtypes):
-                discarded_subtypes = {subtype for subtype in subtypes if any(subtype.split('*')[0] in other_subtypes for other_subtypes in subtypes - {subtype})}
-                discarded_sseqids.update({sseqid for sseqid in sseqids if sseqid.split('|')[2] in discarded_subtypes})
+            for sseqid in sseqids:
+                subtype = sseqid.split('|')[2]
+                bitscore = sum(bitscores.get(element).get(sseqid, 0) for element in elements)
+                for element in elements:
+                    merged_bitscores[element][subtype] = max(bitscore, merged_bitscores.get(element, {}).get(subtype, 0))
 
             for element in elements:
                 discarded_hits[element].update(discarded_sseqids)
@@ -333,7 +337,7 @@ class AntibioticResistanceGeneProfiler:
         ## filter out hits if they locate on the same position (>=25% overlap)
         hits = []
         qcoords = defaultdict(set)
-        for hit in self.hits:
+        for hit in sorted([hit + [merged_bitscores.get(hit[0], {}).get(hit[1].split('|')[2], 0)] for hit in self.hits], key=lambda hit: (hit[-1], hit[-2]), reverse=True):
             qseqid, qstart, qend = hit[0], hit[3], hit[4]
             if (
                 qseqid not in qcoords or
@@ -402,7 +406,7 @@ class AntibioticResistanceGeneProfiler:
             reads[hit[0]]['plasmid'] = True if carrier == 'plasmid' else False
 
             reads[hit[0]]['hit'].append(hit[1].split('|', 1)[-1])
-            lineage2copy[(lineage, *re.sub('@[A-Z]+', '', hit[1].replace('_', ' ')).split('|')[1:3], carrier)] += hit[-1]
+            lineage2copy[(lineage, *re.sub('@[A-Z]+', '', hit[1].replace('_', ' ')).split('|')[1:3], carrier)] += hit[9]
 
         self.profile = []
         for lineage, copy in lineage2copy.items():
