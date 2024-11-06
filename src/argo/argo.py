@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 from collections import defaultdict
-from scipy.sparse import dok_matrix
+from scipy.sparse import coo_matrix
 
 from melon.utils import *
 from .utils import *
@@ -245,15 +245,18 @@ class AntibioticResistanceGeneProfiler:
         '''
         nodes = np.unique([hit[0] for hit in self.hits])
         node2index = {node: index for index, node in enumerate(nodes)}
-        matrix = dok_matrix((len(nodes), len(nodes)))
 
         identities = {}
         while self.overlaps:
             overlap = self.overlaps.pop()
-            if (row := node2index.get(overlap[0])) and (col := node2index.get(overlap[1])):
-                identities[(row, col)] = identities[(col, row)] = max(1 - overlap[-1], identities.get((row, col), 0), identities.get((col, row), 0))
+            if overlap[-1] <= self.DV:
+                if (row := node2index.get(overlap[0])) and (col := node2index.get(overlap[1])):
+                    if col < row:
+                        row, col = col, row
+                    identities[(row, col)] = max(1 - overlap[-1], identities.get((row, col), 0))
 
-        matrix[*zip(*identities.keys())] = list(identities.values())
+        rows, cols = zip(*list(identities.keys()))
+        matrix = coo_matrix((list(identities.values()) * 2, (rows + cols, cols + rows)), shape=(len(nodes), len(nodes)))
         del self.overlaps, identities
 
         clusters = mcl(matrix, max_iterations=max_iterations, inflation=inflation, expansion=expansion)

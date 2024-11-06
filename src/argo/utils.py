@@ -1,6 +1,6 @@
 import numpy as np
 
-from scipy.sparse import dok_matrix
+from scipy.sparse import coo_matrix
 from sklearn.preprocessing import normalize
 
 
@@ -103,15 +103,16 @@ def iterate(matrix, inflation, expansion, pruning_threshold):
     matrix = sparse_normalize((matrix ** expansion).power(inflation))
 
     ## prune entries with small values
-    submatrix = matrix > pruning_threshold
-    matrix_pruned = dok_matrix(matrix.shape)
-    matrix_pruned[submatrix] = matrix[submatrix]
+    rows, cols = matrix.argmax(axis=0).A1, np.arange(matrix.shape[1])
+    max_entries = coo_matrix((matrix[rows, cols].A1, (rows, cols)), shape=matrix.shape)
 
-    row = matrix.argmax(axis=0).reshape((matrix.shape[0], ))
-    col = np.arange(matrix.shape[0])
-    matrix_pruned[row, col] = matrix[row, col]
+    matrix.data[matrix.data < pruning_threshold] = 0
+    matrix.eliminate_zeros()
 
-    return matrix_pruned.tocsc()
+    ## add masked values back
+    matrix = matrix.maximum(max_entries)
+
+    return matrix
 
 
 def mcl(matrix, max_iterations=1000, inflation=2, expansion=2):
@@ -132,9 +133,7 @@ def mcl(matrix, max_iterations=1000, inflation=2, expansion=2):
             List of clusters
     '''
     ## add self-loops to the matrix
-    for index in range(matrix.shape[0]):
-        matrix[index, index] = 1
-
+    matrix.setdiag(1)
     matrix = sparse_normalize(matrix)
     for iteration in range(max_iterations):
         matrix_hist = matrix.copy()
