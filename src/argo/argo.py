@@ -42,14 +42,20 @@ class AntibioticResistanceGeneProfiler:
         '''
         Get overlaps of top 10k reads.
         '''
-        with open(f'{self.outfile}.init.sequence.tmp', 'w') as w:
-            subprocess.run(['seqkit', 'head', '-n', '10000', self.file], check=True, stdout=w)
+        subprocess.run([
+            'seqkit', 'head',
+            '-n', '10000',
+            '-o', f'{self.outfile}.init.sequence.tmp',
+            self.file
+        ], check=True, stderr=subprocess.DEVNULL)
 
-        with open(f'{self.outfile}.init.overlap.tmp', 'w') as w:
-            subprocess.run([
-                'minimap2', '-x', 'ava-ont', '-t', str(self.threads),
-                f'{self.outfile}.init.sequence.tmp', f'{self.outfile}.init.sequence.tmp'
-            ], check=True, stdout=w, stderr=subprocess.DEVNULL)
+        subprocess.run([
+            'minimap2',
+            '-x', 'ava-ont',
+            '-t', str(self.threads),
+            '-o', f'{self.outfile}.init.overlap.tmp',
+            f'{self.outfile}.init.sequence.tmp', f'{self.outfile}.init.sequence.tmp'
+        ], check=True, stderr=subprocess.DEVNULL)
 
     def post_overlap(self, chunk_size=0):
         '''
@@ -64,17 +70,20 @@ class AntibioticResistanceGeneProfiler:
                 os.remove(file)
 
             subprocess.run([
-                'seqkit', 'split', '-p', str(nchunks), '--out-dir', self.output,
+                'seqkit', 'split',
+                '-p', str(nchunks),
+                '--out-dir', self.output,
                 f'{self.outfile}.sarg.sequence.tmp'
             ], check=True, stderr=subprocess.DEVNULL)
 
-        files = glob.glob(f'{self.outfile}.sarg.sequence.part*.tmp') if nchunks > 1 else [f'{self.outfile}.sarg.sequence.tmp']
-        with open(f'{self.outfile}.sarg.overlap.tmp', 'w') as w:
-            for file in files:
-                subprocess.run([
-                    'minimap2', '-x', 'ava-ont', '-t', str(self.threads), '-I', '1G',
-                    file, file
-                ], check=True, stdout=w, stderr=subprocess.DEVNULL)
+        for file in glob.glob(f'{self.outfile}.sarg.sequence.part*.tmp') if nchunks > 1 else [f'{self.outfile}.sarg.sequence.tmp']:
+            subprocess.run([
+                'minimap2',
+                '-x', 'ava-ont',
+                '-t', str(self.threads),
+                '-o', file.replace('.sarg.sequence.', '.sarg.overlap.'),
+                file, file
+            ], check=True, stderr=subprocess.DEVNULL)
 
     def run_overlap(self, mode, identity=0, chunk_size=0, scale=2.5):
         '''
@@ -99,11 +108,12 @@ class AntibioticResistanceGeneProfiler:
         ## compute an overlap identity based on all ARG-containing reads
         if mode == 'post':
             if not self.debug: self.post_overlap(chunk_size=chunk_size)
-            self.overlaps = filter_overlap(f'{self.outfile}.sarg.overlap.tmp')
+            self.overlaps = []
+            for file in glob.glob(f'{self.outfile}.sarg.overlap*.tmp'):
+                self.overlaps.extend(filter_overlap(file))
 
-            ## filter out overlaps if divergence is higher than 2.5 * median sequence divergence
             DV = np.median(np.fromiter((x[-1] for x in self.overlaps), dtype=float))
-            self.overlaps = [overlap for overlap in self.overlaps if overlap[-1] <= max(scale * DV, 0.05)]
+            self.DV = max(scale * DV, 0.05)
 
             if identity == 0:
                 ## update identity cutoff if necessary
@@ -128,11 +138,15 @@ class AntibioticResistanceGeneProfiler:
             '--query', self.file,
             '--out', f'{self.outfile}.sarg.diamond.tmp',
             '--outfmt', '6', *outfmt,
-            '--evalue', str(evalue), '--id', str(identity),
-            '--range-culling', '-F', '15', '--range-cover', '25',
-            '--max-hsps', '0', '--max-target-seqs', str(max_target_seqs),
+            '--evalue', str(evalue),
+            '--id', str(identity),
+            '--range-culling',
+            '--frameshift', '15',
+            '--range-cover', '25',
+            '--max-hsps', '0',
+            '--max-target-seqs', str(max_target_seqs),
             '--threads', str(self.threads)
-        ], check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        ], check=True, stderr=subprocess.DEVNULL)
 
     def parse_diamond(self):
         '''
@@ -169,7 +183,7 @@ class AntibioticResistanceGeneProfiler:
         with open(f'{self.outfile}.sarg.minimap.tmp', 'w') as w:
             with logging_redirect_tqdm():
                 bar_format = '==> {desc}{percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt} [{elapsed}<{remaining}]'
-                queue = tqdm(qseqids.items(), bar_format=bar_format, leave=False)
+                queue = tqdm(dict(sorted(qseqids.items())).items(), bar_format=bar_format, leave=False)
                 for family, qseqid in queue:
                     queue.set_description(f'Processing <{family}>')
                     sequences = extract_sequence(f'{self.outfile}.sarg.sequence.tmp', qseqid)
@@ -216,7 +230,10 @@ class AntibioticResistanceGeneProfiler:
 
         ## filter out low-score alignments
         duplicates = set()
-        for alignment in sorted(alignments, key=lambda alignment: (alignment[0], alignment[2]), reverse=True):
+        alignments.sort(key=lambda alignment: (alignment[0], alignment[2]))
+
+        while alignments:
+            alignment = alignments.pop()
             if max(alignment[2] / 0.995, alignment[2] + 50) > max_scores.get(alignment[0]):
                 if (alignment[0], alignment[-1]) not in duplicates:
                     self.alignments.append(alignment)
