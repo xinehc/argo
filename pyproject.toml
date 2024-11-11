@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools >= 64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argo"
+authors = [
+    {name = "Xi Chen", email = "xinehc@gmail.com"},
+]
+readme = "README.md"
+description = "Argo: species-resolved profiling of antibiotic resistance genes in complex metagenomes through long-read overlapping"
+license = {file = "LICENSE"}
+dynamic = ["version"]
+requires-python = ">=3.7"
+
+[project.scripts]
+argo = "argo.cli:cli"
+
+[tool.setuptools.dynamic]
+version = {attr = "argo.__version__"}

@@ -13,7 +13,7 @@ def cli(argv=sys.argv):
     '''
     Entry point for command line interface.
     '''
-    parser = ArgumentParser(description='ARGO: Overlapping-based ARG profiling', add_help=False)
+    parser = ArgumentParser(description='Argo: species-resolved profiling of antibiotic resistance genes in complex metagenomes through long-read overlapping', add_help=False)
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
     additional = parser.add_argument_group('additional arguments for profiling genomes')
