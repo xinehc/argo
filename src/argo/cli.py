@@ -55,7 +55,7 @@ def cli(argv=sys.argv):
     optional.add_argument(
         '--plasmid',
         action='store_true',
-        help='Assign taxonomic labels to plasmid-borne ARGs to their most likely hosts.')
+        help='List ARGs carried by plasmids.')
 
     optional.add_argument(
         '--skip-clean',
@@ -165,7 +165,7 @@ def cli(argv=sys.argv):
         metavar='FLOAT',
         type=float,
         default=1,
-        help='Min. estimated genome copies of a species to report it ARG copies and abundance. [1]')
+        help='Min. estimated genome copies of a species to report it ARG copies and abundances. [1]')
 
     additional_arg.add_argument(
         '-u',

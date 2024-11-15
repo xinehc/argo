@@ -41,7 +41,7 @@ rm -rf database/*.fa
 
 ### Run Argo
 > [!NOTE]
-> Argo by default does not assign taxonomic labels to *plasmid reads* since plasmids can have multiple hosts (for example [NZ_OW968330.1](https://www.ncbi.nlm.nih.gov/nuccore/NZ_OW968330.1)). `--plasmid` forces taxonomic classification of these reads by assigning them to their "most likely" lineages (ties are resolved based on the estimated genome copies of species within a sample), but interpretation requires caution.
+> Argo by default classifies *all reads* that carry at least one ARG into their "most likely" lineages with ties resolved based on the estimated genome copies of species present. Since *plasmid reads* can have multiple hosts in a sample (e.g., [NZ_OW968330.1](https://www.ncbi.nlm.nih.gov/nuccore/NZ_OW968330.1)), interpretation requires caution. `--plasmid` forces the splitting of ARGs by their carriers (chromosomes or plasmids), but chimeric reads and uncharacterized plasmids may interfere with the identification.
 
 We provide an example file comprising 10,000 quality-controlled (processed with `Porechop` and `nanoq`) prokaryotic reads (fungal and other reads removed with `minimap2`), randomly selected from the R10.3 mock sample of [Loman Lab Mock Community Experiments](https://lomanlab.github.io/mockcommunity/r10.html).
 ```bash
@@ -118,9 +118,11 @@ argo *.fa -d database -o . --plasmid -I 80 -S 80
 
 A complete list of arguments and their default values is shown below:
 ```
-usage: argo -d DIR -o DIR [-t INT] [-k DIR] [--preset {lq,hq,auto}] [--plasmid] [--skip-clean] [-m INT] [-e FLOAT] [-i FLOAT] [-s FLOAT] [-n INT] [-p FLOAT] [-a INT] [-c FLOAT] [-M INT] [-E FLOAT] [-I FLOAT] [-S FLOAT] [-N INT] [-P FLOAT] [-z FLOAT] [-u INT] [-b INT] [-x FLOAT] [-y FLOAT] FILE [FILE ...]
+usage: argo -d DIR -o DIR [-t INT] [-k DIR] [--plasmid] [--skip-clean] [-m INT] [-e FLOAT] [-i FLOAT] [-s FLOAT] [-n INT] [-p FLOAT] [-a INT] [-c FLOAT] [-M INT] [-E FLOAT] [-I FLOAT] [-S FLOAT] [-N INT]
+            [-P FLOAT] [-z FLOAT] [-u INT] [-b INT] [-x FLOAT] [-y FLOAT]
+            FILE [FILE ...]
 
-ARGO: Overlapping-based ARG profiling
+Argo: species-resolved profiling of antibiotic resistance genes in complex metagenomes through long-read overlapping
 
 positional arguments:
   FILE                  Input fasta <*.fa|*.fasta> or fastq <*.fq|*.fastq> file, gzip optional <*.gz>.
@@ -134,9 +136,7 @@ optional arguments:
                         Number of threads. [10]
   -k DIR, --db-kraken DIR
                         Unzipped kraken2 database for pre-filtering of non-prokaryotic reads. Skip if not given.
-  --preset {lq,hq,auto}
-                        Preset of minimap2. If "auto" then set based on median sequence divergence: <0.01 "hq" (lr:hq); ≥0.01 "lq" (map-ont). [auto]
-  --plasmid             Assign taxonomic labels to plasmid-borne ARGs to their most likely hosts.
+  --plasmid             List ARGs carried by plasmids.
   --skip-clean          Skip cleaning, keep all temporary <*.tmp> files.
 
 additional arguments for profiling genomes:
@@ -156,7 +156,7 @@ additional arguments for profiling antibiotic resistance genes:
   -S FLOAT              Min. subject cover of all HPSs within a read cluster to report alignments. [90]
   -N INT                Max. number of secondary alignments to report (-N in minimap2). [2147483647]
   -P FLOAT              Min. secondary-to-primary score ratio to report secondary alignments (-p in minimap2). [0.9]
-  -z FLOAT              Min. estimated genome copies of a species to report it ARG copies and abundance. [1]
+  -z FLOAT              Min. estimated genome copies of a species to report it ARG copies and abundances. [1]
   -u INT                Max. number of ARG-containing reads per chunk for overlapping. If "0" then use a single chunk. [0]
   -b INT                Graph clustering parameter for MCL - max. iterations. [1000]
   -x FLOAT              Graph clustering parameter for MCL - inflation. [2]
@@ -169,20 +169,10 @@ additional arguments for profiling antibiotic resistance genes:
 
 Yes, Argo can provide rough estimates of ARG abundances (cpg) for isolates. However, the computational time may be longer for certain pathogenic species (e.g., *Escherichia coli*, *Salmonella enterica*) which typically contain many copies of ARGs on their genomes and are highly redundant in GTDB.
 
-### Why is Argo running slowly?
+### Why is Argo running slowly for certain samples?
 
 The computational time increases not only with the size of the sample but also with the number of ARG-containing reads and the redundancy of the database. If your sample contains a large proportion of *Escherichia coli* (see above), the computational time is likely to be much longer than usual.
 
 ### Does Argo work with assembled contigs?
 
-No, Argo is inherently read-based and does not work with contigs. You may consider using `diamond` or `blast` directly with SARG+/NDARO/CARD for ARG annotation.
-
-### How to aggregate ARGs by species (plasmid + chromosome)?
-
-This can be done via simple table collapsing:
-
-```python
-import pandas as pd
-filename = 'example'
-pd.read_table(f'{filename}.sarg.tsv').groupby(['lineage', 'type', 'subtype', 'genome']).sum().to_csv(f'{filename}.sarg.aggregated.tsv')
-```
+No, Argo is inherently read-based and does not work with contigs. You may consider using `diamond blastx/p` directly with SARG+/NDARO/CARD for ARG annotation.
