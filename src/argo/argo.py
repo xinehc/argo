@@ -197,7 +197,7 @@ class AntibioticResistanceGeneProfiler:
                         os.path.join(self.db, f'sarg.{family}.mmi'), '-',
                     ], check=True, stdout=w, stderr=subprocess.DEVNULL, input=sequences, text=True)
 
-    def parse_minimap(self):
+    def parse_minimap(self, plasmid=False):
         '''
         Parse minimap's paf output.
         '''
@@ -219,6 +219,8 @@ class AntibioticResistanceGeneProfiler:
                 ls = line.rstrip().split('\t')
                 qstart, qend, qseqid, sseqid = int(ls[2]), int(ls[3]), ls[0], ls[5]
                 lineage = accession2lineage[sseqid.rsplit('_', 1)[0]] if 'plasmid@' not in sseqid else 'plasmid'
+                if lineage == 'plasmid' and not plasmid:
+                    continue
 
                 ## filter out non-overlapping alignments
                 if (AS := int(ls[14].split('AS:i:')[-1])) > scores[qseqid].get(lineage, -np.inf):
@@ -409,7 +411,7 @@ class AntibioticResistanceGeneProfiler:
 
         ## parse taxonomic assignments then reassign with set cover
         logger.info('Set covering ...')
-        self.parse_minimap()
+        self.parse_minimap(plasmid=plasmid)
         self.run_sc()
 
         ## postprocessing
@@ -418,7 +420,7 @@ class AntibioticResistanceGeneProfiler:
         for hit in self.hits:
             lineage = self.assignments.get(hit[0])
             carrier = 'plasmid' if '@plasmid' in lineage else 'chromosome'
-            if self.lineage2genome.get(lineage.split('@')[0], -np.inf) < min_genome_copies or (carrier == 'plasmid' and not plasmid):
+            if self.lineage2genome.get(lineage.split('@')[0], -np.inf) < min_genome_copies:
                 lineage = 'unclassified'
             else:
                 lineage = lineage.split('@')[0]
@@ -437,10 +439,14 @@ class AntibioticResistanceGeneProfiler:
 
         ## ARG profile
         with open(f'{self.outfile}.sarg.tsv', 'w') as w:
-            w.write('\t'.join(['lineage', 'type', 'subtype', 'carrier', 'copy', 'genome', 'abundance']) + '\n')
-
-            for row in sorted(self.profile):
-                w.write('\t'.join(row[:4] + [f'{row[4]:.3f}', f'{row[5]:.3f}', f'{row[6]:.3f}']) + '\n')
+            if plasmid:
+                w.write('\t'.join(['lineage', 'type', 'subtype', 'carrier', 'copy', 'genome', 'abundance']) + '\n')
+                for row in sorted(self.profile):
+                    w.write('\t'.join(row[:4] + [f'{row[4]:.3f}', f'{row[5]:.3f}', f'{row[6]:.3f}']) + '\n')
+            else:
+                w.write('\t'.join(['lineage', 'type', 'subtype', 'copy', 'genome', 'abundance']) + '\n')
+                for row in sorted(self.profile):
+                    w.write('\t'.join(row[:3] + [f'{row[4]:.3f}', f'{row[5]:.3f}', f'{row[6]:.3f}']) + '\n')
 
         ## read classification
         with open(f'{self.outfile}.sarg.json', 'w') as w:
