@@ -1,4 +1,9 @@
 # Changelog
+## [0.1.3] - 2024-11-15
+### Changed
+- Change default mode (without `--plasmid`) to classifying all reads that carry ARGs.
+
+
 ## [0.1.2] - 2024-11-01
 ### Changed
 - Use total bitscores per cluster for determining final HSPs. This help reduce false positives in certain cases.
