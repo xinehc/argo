@@ -18,7 +18,7 @@ conda activate argo
 ### Database setup
 Download the database from [Zenodo](https://zenodo.org/records/12576528):
 ```bash
-wget -qN --show-progress https://zenodo.org/records/12576528/files/database.tar.gz
+wget -qN --show-progress https://zenodo.org/records/14172434/files/database.tar.gz
 tar -xvf database.tar.gz
 ```
 
@@ -59,14 +59,14 @@ INFO: ... found 8 unique species (bacteria: 8; archaea: 0).
 INFO: Overlapping ...
 INFO: ... median sequence divergence: 0.0519 | initial identity cutoff: 0.9 * 77.03.
 INFO: Annotating ARGs ...
-INFO: ... candidate HSPs: 11094 | ARG-containing reads: 627.
+INFO: ... candidate HSPs: 11316 | ARG-containing reads: 632.
 INFO: Overlapping of ARG-containing reads ...
-INFO: ... median sequence divergence of ARG-containing reads: 0.0504 | identity cutoff: 77.40 | low-identity HSPs: 3511.
+INFO: ... median sequence divergence of ARG-containing reads: 0.0503 | identity cutoff: 77.41 | low-identity HSPs: 3621.
 INFO: Assigning taxonomy ...
 INFO: Graph clustering ...
-INFO: ... read clusters: 168 | low-subject-cover HSPs: 525 | overlapping HSPs: 6200 | remaining HSPs: 858
+INFO: ... read clusters: 169 | low-subject-cover HSPs: 524 | overlapping HSPs: 6336 | remaining HSPs: 835
 INFO: Set covering ...
-INFO: ... ARG copies per genome: 28.581 | ARG types: 18 | ARG subtypes: 157 | ARG-carrying species: 8.
+INFO: ... ARG copies per genome: 27.849 | ARG types: 17 | ARG subtypes: 155 | ARG-carrying species: 8.
 INFO: Done.
 ```
 
@@ -90,17 +90,16 @@ Output file `example.sarg.json` contains detailed annotation information for ARG
     "dab6192d-f9e3-4eb6-ae8c-3d40e787e072": {
         "remark": "ARG-containing",
         "hit": [
-            "multidrug@MFS|norA|WP_001041274.1"
+            "multidrug@MFS|norA|WP_001041272.1"
         ],
         "lineage": "Bacteria;Bacillota;Bacilli;Staphylococcales;Staphylococcaceae;Staphylococcus;Staphylococcus aureus",
         "plasmid": false
     },
     ...
-    "a9eae701-3767-4a1f-ac00-8945fcde986a": {
+    "b62a8716-65cb-4170-9a8c-3c7f87e78fea": {
         "remark": "ARG-containing",
         "hit": [
-            "aminoglycoside|ant(4')-I|WP_001795128.1",
-            "tetracycline|tet(L)|WP_012779616.1"
+            "tetracycline|tet(L)|WP_001574277.1"
         ],
         "lineage": "Bacteria;Bacillota;Bacilli;Staphylococcales;Staphylococcaceae;Staphylococcus;Staphylococcus aureus",
         "plasmid": true
@@ -165,14 +164,14 @@ additional arguments for profiling antibiotic resistance genes:
 
 
 ## FAQ
-### Does Argo work with long reads of isolates?
+### Does Argo work with isolates?
 
-Yes, Argo can provide rough estimates of ARG abundances (cpg) for isolates. However, the computational time may be longer for certain pathogenic species (e.g., *Escherichia coli*, *Salmonella enterica*) which typically contain many copies of ARGs on their genomes and are highly redundant in GTDB.
-
-### Why is Argo running slowly for certain samples?
-
-The computational time increases not only with the size of the sample but also with the number of ARG-containing reads and the redundancy of the database. If your sample contains a large proportion of *Escherichia coli* (see above), the computational time is likely to be much longer than usual.
+Yes, Argo can provide rough estimates of ARG abundances (cpg) for isolates. However, the computational time may be longer for pathogenic species (e.g., *Escherichia coli*, *Salmonella enterica*) which typically contain many copies of ARGs on their genomes and are highly redundant in GTDB.
 
 ### Does Argo work with assembled contigs?
 
 No, Argo is inherently read-based and does not work with contigs. You may consider using `diamond blastx/p` directly with SARG+/NDARO/CARD for ARG annotation.
+
+### Why is Argo running slowly for certain samples?
+
+The computational time increases not only with the size of the sample but also with the number of ARG-containing reads and the redundancy of the database. If your sample contains a large proportion of *Escherichia coli* (see above), the computational time is likely to be much longer than usual.
