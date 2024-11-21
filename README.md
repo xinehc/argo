@@ -16,7 +16,7 @@ conda activate argo
 ```
 
 ### Database setup
-Download the database from [Zenodo](https://zenodo.org/records/12576528):
+Download the database from [Zenodo](https://zenodo.org/records/14172434):
 ```bash
 wget -qN --show-progress https://zenodo.org/records/14172434/files/database.tar.gz
 tar -xvf database.tar.gz
