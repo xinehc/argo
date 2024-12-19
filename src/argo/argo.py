@@ -425,7 +425,8 @@ class AntibioticResistanceGeneProfiler:
             else:
                 lineage = lineage.split('@')[0]
             reads[hit[0]]['lineage'] = lineage
-            reads[hit[0]]['plasmid'] = True if carrier == 'plasmid' else False
+            if plasmid:
+                reads[hit[0]]['plasmid'] = True if carrier == 'plasmid' else False
 
             reads[hit[0]]['hit'].append(hit[1].split('|', 1)[-1])
             lineage2copy[(lineage, *re.sub('@[A-Z-0-9]+', '', hit[1].replace('_', ' ')).split('|')[1:3], carrier)] += hit[9]
