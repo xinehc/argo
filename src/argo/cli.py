@@ -4,7 +4,7 @@ import glob
 
 from argparse import ArgumentParser, SUPPRESS
 from . import __version__
-from melon.utils import logger
+from melon.utils import logger, get_filename
 from melon import GenomeProfiler
 from . import AntibioticResistanceGeneProfiler
 
@@ -16,8 +16,8 @@ def cli(argv=sys.argv):
     parser = ArgumentParser(description='Argo: species-resolved profiling of antibiotic resistance genes in complex metagenomes through long-read overlapping', add_help=False)
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
-    additional = parser.add_argument_group('additional arguments for profiling genomes')
-    additional_arg = parser.add_argument_group('additional arguments for profiling antibiotic resistance genes')
+    additional = parser.add_argument_group('additional arguments')
+    additional_mcl = parser.add_argument_group('additional arguments for MCL')
 
     parser.add_argument(
         'FILE',
@@ -47,15 +47,14 @@ def cli(argv=sys.argv):
         help=f'Number of threads. [{os.cpu_count()}]')
 
     optional.add_argument(
-        '-k',
-        '--db-kraken',
-        metavar='DIR',
-        help='Unzipped kraken2 database for pre-filtering of non-prokaryotic reads. Skip if not given.')
-
-    optional.add_argument(
         '--plasmid',
         action='store_true',
         help='List ARGs carried by plasmids.')
+
+    optional.add_argument(
+        '--skip-melon',
+        action='store_true',
+        help='Skip Melon for genome copy estimation.')
 
     optional.add_argument(
         '--skip-clean',
@@ -73,22 +72,22 @@ def cli(argv=sys.argv):
         '-e',
         metavar='FLOAT',
         type=float,
-        default=1e-15,
-        help='Max. expected value to report alignments (--evalue/-e in diamond). [1e-15]')
+        default=1e-5,
+        help='Max. expected value to report alignments (--evalue/-e in diamond). [1e-5]')
 
     additional.add_argument(
         '-i',
         metavar='FLOAT',
         type=float,
         default=0,
-        help='Min. identity in percentage to report alignments (--id in diamond). [0]')
+        help='Min. identity in percentage to report alignments. If "0" then set 90 - 2.5 * 100 * median sequence divergence. [0]')
 
     additional.add_argument(
         '-s',
         metavar='FLOAT',
         type=float,
-        default=75,
-        help='Min. subject cover to report alignments (--subject-cover in diamond). [75]')
+        default=90,
+        help='Min. subject cover of all HPSs within a read cluster to report alignments. [90]')
 
     additional.add_argument(
         '-n',
@@ -105,95 +104,39 @@ def cli(argv=sys.argv):
         help='Min. secondary-to-primary score ratio to report secondary alignments (-p in minimap2). [0.9]')
 
     additional.add_argument(
-        '-a',
-        metavar='INT',
-        type=int,
-        default=1000,
-        help='Terminal condition for EM - max. iterations. [1000]')
-
-    additional.add_argument(
-        '-c',
-        metavar='FLOAT',
-        type=float,
-        default=1e-10,
-        help='Terminal condition for EM - epsilon (precision). [1e-10]')
-
-    additional_arg.add_argument(
-        '-M',
-        metavar='INT',
-        type=int,
-        default=25,
-        help='Max. number of target sequences to report (--max-target-seqs/-k in diamond). [25]')
-
-    additional_arg.add_argument(
-        '-E',
-        metavar='FLOAT',
-        type=float,
-        default=1e-5,
-        help='Max. expected value to report alignments (--evalue/-e in diamond). [1e-5]')
-
-    additional_arg.add_argument(
-        '-I',
-        metavar='FLOAT',
-        type=float,
-        default=0,
-        help='Min. identity in percentage to report alignments. If "0" then set 90 - 2.5 * 100 * median sequence divergence. [0]')
-
-    additional_arg.add_argument(
-        '-S',
-        metavar='FLOAT',
-        type=float,
-        default=90,
-        help='Min. subject cover of all HPSs within a read cluster to report alignments. [90]')
-
-    additional_arg.add_argument(
-        '-N',
-        metavar='INT',
-        type=int,
-        default=2147483647,
-        help='Max. number of secondary alignments to report (-N in minimap2). [2147483647]')
-
-    additional_arg.add_argument(
-        '-P',
-        metavar='FLOAT',
-        type=float,
-        default=0.9,
-        help='Min. secondary-to-primary score ratio to report secondary alignments (-p in minimap2). [0.9]')
-
-    additional_arg.add_argument(
         '-z',
         metavar='FLOAT',
         type=float,
         default=1,
         help='Min. estimated genome copies of a species to report it ARG copies and abundances. [1]')
 
-    additional_arg.add_argument(
+    additional.add_argument(
         '-u',
         metavar='INT',
         type=int,
         default=0,
         help='Max. number of ARG-containing reads per chunk for overlapping. If "0" then use a single chunk. [0]')
 
-    additional_arg.add_argument(
+    additional_mcl.add_argument(
         '-b',
         metavar='INT',
         type=int,
         default=1000,
-        help='Graph clustering parameter for MCL - max. iterations. [1000]')
+        help='Terminal condition - max. iterations. [1000]')
 
-    additional_arg.add_argument(
+    additional_mcl.add_argument(
         '-x',
         metavar='FLOAT',
         type=float,
         default=2,
-        help='Graph clustering parameter for MCL - inflation. [2]')
+        help='Graph clustering parameter - inflation. [2]')
 
-    additional_arg.add_argument(
+    additional_mcl.add_argument(
         '-y',
         metavar='FLOAT',
         type=float,
         default=2,
-        help='Graph clustering parameter for MCL - expansion. [2]')
+        help='Graph clustering parameter - expansion. [2]')
 
     parser.add_argument('-v', '--version', action='version', version=__version__, help=SUPPRESS)
     parser.add_argument('-h', '--help', action='help', help=SUPPRESS)
@@ -236,21 +179,10 @@ def run(opt):
             'metadata.tsv' not in files or 'sarg.metadata.tsv' not in files
             or 'prot.dmnd' not in files  or 'sarg.dmnd' not in files
             or len([file for file in files if 'nucl.' in file and '.mmi' in file]) != 16
-            or len([file for file in files if 'sarg.' in file and '.mmi' in file]) <= 42
+            or len([file for file in files if 'sarg.' in file and '.mmi' in file]) <= 32
         ):
             logger.critical(f'Database <{opt.db}> is not complete or not indexed.')
             sys.exit(2)
-
-    ## check for kraken2 database
-    if opt.db_kraken is not None:
-        if not os.path.isdir(opt.db_kraken):
-            logger.critical(f'Kraken2 database folder <{opt.db_kraken}> does not exist.')
-            sys.exit(2)
-        else:
-            files = [os.path.basename(file) for file in glob.glob(os.path.join(opt.db_kraken, '*'))]
-            if 'ktaxonomy.tsv' not in files or len([file for file in files if 'database' in file]) != 7:
-                logger.critical(f'Kraken2 database <{opt.db_kraken}> is not complete.')
-                sys.exit(2)
 
     ## check for logical cores
     if opt.threads > os.cpu_count():
@@ -264,16 +196,15 @@ def run(opt):
         if len(opt.FILE) > 1:
             logger.info(f'Processing file <{file}> ({index + 1}/{len(opt.FILE)}) ...')
 
-        GenomeProfiler(file, opt.db, opt.output, opt.threads).run(
-            db_kraken=opt.db_kraken, skip_clean=opt.skip_clean,
-            max_target_seqs=opt.m, evalue=opt.e, identity=opt.i, subject_cover=opt.s,
-            secondary_num=opt.n, secondary_ratio=opt.p,
-            max_iterations=opt.a, epsilon=opt.c)
+        if not opt.skip_melon or any(not os.path.isfile(get_filename(file, opt.output, ext)) for ext in ['.tsv', '.json']):
+            GenomeProfiler(file, opt.db, opt.output, opt.threads).run(skip_clean=opt.skip_clean)
+        else:
+            logger.info(f'Loading genome copy information ...')
 
         AntibioticResistanceGeneProfiler(file, opt.db, opt.output, opt.threads).run(
             plasmid=opt.plasmid, skip_clean=opt.skip_clean,
-            max_target_seqs=opt.M, evalue=opt.E, identity=opt.I, subject_cover=opt.S,
-            secondary_num=opt.N, secondary_ratio=opt.P,
+            max_target_seqs=opt.m, evalue=opt.e, identity=opt.i, subject_cover=opt.s,
+            secondary_num=opt.n, secondary_ratio=opt.p,
             min_genome_copies=opt.z, chunk_size=opt.u,
             max_iterations=opt.b, inflation=opt.x, expansion=opt.y)
 
