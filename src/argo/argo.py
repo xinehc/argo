@@ -194,7 +194,7 @@ class AntibioticResistanceGeneProfiler:
                         '-N', str(secondary_num),
                         '-p', str(secondary_ratio),
                         '-t', str(self.threads),
-                        os.path.join(self.db, f'sarg.{family}.mmi'), '-',
+                        os.path.join(self.db, f'sarg.{family.replace('/', ';')}.mmi'), '-',
                     ], check=True, stdout=w, stderr=subprocess.DEVNULL, input=sequences, text=True)
 
     def parse_minimap(self, plasmid=False):
