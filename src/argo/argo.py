@@ -127,7 +127,7 @@ class AntibioticResistanceGeneProfiler:
             else:
                 self.identity = identity
 
-    def run_diamond(self, max_target_seqs=25, evalue=1e-5, identity=0):
+    def run_diamond(self, max_target_seqs=25, evalue=1e-5):
         '''
         Run diamond blastx.
         '''
@@ -139,7 +139,6 @@ class AntibioticResistanceGeneProfiler:
             '--out', f'{self.outfile}.sarg.diamond.tmp',
             '--outfmt', '6', *outfmt,
             '--evalue', str(evalue),
-            '--id', str(identity),
             '--range-culling',
             '--frameshift', '15',
             '--range-cover', '25',
@@ -393,7 +392,7 @@ class AntibioticResistanceGeneProfiler:
 
         ## annotating ARGs
         logger.info('Annotating ARGs ...')
-        if not self.debug: self.run_diamond(max_target_seqs=max_target_seqs, evalue=evalue, identity=self.identity)
+        if not self.debug: self.run_diamond(max_target_seqs=max_target_seqs, evalue=evalue)
         self.parse_diamond()
 
         ## overlapping of ARG-containing reads
@@ -429,7 +428,7 @@ class AntibioticResistanceGeneProfiler:
                 reads[hit[0]]['plasmid'] = True if carrier == 'plasmid' else False
 
             reads[hit[0]]['hit'].append(hit[1].split('|', 1)[-1])
-            lineage2copy[(lineage, *re.sub('@[A-Z-0-9]+', '', hit[1].replace('_', ' ')).split('|')[1:3], carrier)] += hit[9]
+            lineage2copy[(lineage, re.sub('@[A-Z-0-9]+', '', hit[1].split('|')[1].replace('_', ' ')), hit[1].split('|')[2], carrier)] += hit[9]
 
         self.profile = []
         for lineage, copy in lineage2copy.items():
