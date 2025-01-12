@@ -1,4 +1,11 @@
 # Changelog
+## [0.2.0] - 2025-01-12
+### Changed
+- [***breaking***] Simplify command line interface (`-I` -> `-i`, `-S` -> `-s`), options related genome copy estimation are removed.
+### Added
+- Add `--skip-melon` for skipping genome copy estimation.
+
+
 ## [0.1.3] - 2024-11-15
 ### Changed
 - Change default mode (without `--plasmid`) to classifying all reads that carry ARGs.

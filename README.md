@@ -59,9 +59,9 @@ INFO: ... found 8 unique species (bacteria: 8; archaea: 0).
 INFO: Overlapping ...
 INFO: ... median sequence divergence: 0.0519 | initial identity cutoff: 0.9 * 77.03.
 INFO: Annotating ARGs ...
-INFO: ... candidate HSPs: 11316 | ARG-containing reads: 632.
+INFO: ... candidate HSPs: 11315 | ARG-containing reads: 632.
 INFO: Overlapping of ARG-containing reads ...
-INFO: ... median sequence divergence of ARG-containing reads: 0.0503 | identity cutoff: 77.41 | low-identity HSPs: 3621.
+INFO: ... median sequence divergence of ARG-containing reads: 0.0503 | identity cutoff: 77.41 | low-identity HSPs: 3620.
 INFO: Assigning taxonomy ...
 INFO: Graph clustering ...
 INFO: ... read clusters: 169 | low-subject-cover HSPs: 524 | overlapping HSPs: 6336 | remaining HSPs: 835
@@ -92,8 +92,8 @@ Output file `example.sarg.json` contains detailed annotation information for ARG
         "hit": [
             "multidrug@MFS|norA|WP_001041272.1"
         ],
-        "lineage": "Bacteria;Bacillota;Bacilli;Staphylococcales;Staphylococcaceae;Staphylococcus;Staphylococcus aureus",
-        "plasmid": false
+        "plasmid": false,
+        "lineage": "Bacteria;Bacillota;Bacilli;Staphylococcales;Staphylococcaceae;Staphylococcus;Staphylococcus aureus"
     },
     ...
     "b62a8716-65cb-4170-9a8c-3c7f87e78fea": {
@@ -101,8 +101,8 @@ Output file `example.sarg.json` contains detailed annotation information for ARG
         "hit": [
             "tetracycline|tet(L)|WP_001574277.1"
         ],
-        "lineage": "Bacteria;Bacillota;Bacilli;Staphylococcales;Staphylococcaceae;Staphylococcus;Staphylococcus aureus",
-        "plasmid": true
+        "plasmid": true,
+        "lineage": "Bacteria;Bacillota;Bacilli;Staphylococcales;Staphylococcaceae;Staphylococcus;Staphylococcus aureus"
     },
     ...
 }
