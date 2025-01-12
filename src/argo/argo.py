@@ -417,18 +417,17 @@ class AntibioticResistanceGeneProfiler:
         reads = {hit[0]: {'remark': 'ARG-containing', 'hit': []} for hit in self.hits}
         lineage2copy = defaultdict(lambda: 0)
         for hit in self.hits:
-            lineage = self.assignments.get(hit[0])
-            carrier = 'plasmid' if '@plasmid' in lineage else 'chromosome'
-            if self.lineage2genome.get(lineage.split('@')[0], -np.inf) < min_genome_copies:
-                lineage = 'unclassified'
-            else:
-                lineage = lineage.split('@')[0]
-            reads[hit[0]]['lineage'] = lineage
+            assignment = self.assignments.get(hit[0])
+            lineage = 'unclassified' if self.lineage2genome.get(assignment.split('@')[0], -np.inf) < min_genome_copies else assignment.split('@')[0]
+            index = (lineage, re.sub('@[A-Z-0-9]+', '', hit[1].split('|')[1].replace('_', ' ')), hit[1].split('|')[2])
             if plasmid:
+                carrier = 'plasmid' if '@plasmid' in assignment else 'chromosome'
                 reads[hit[0]]['plasmid'] = True if carrier == 'plasmid' else False
+                index = (*index, carrier)
 
+            reads[hit[0]]['lineage'] = lineage
             reads[hit[0]]['hit'].append(hit[1].split('|', 1)[-1])
-            lineage2copy[(lineage, re.sub('@[A-Z-0-9]+', '', hit[1].split('|')[1].replace('_', ' ')), hit[1].split('|')[2], carrier)] += hit[9]
+            lineage2copy[index] += hit[9]
 
         self.profile = []
         for lineage, copy in lineage2copy.items():
@@ -439,14 +438,11 @@ class AntibioticResistanceGeneProfiler:
 
         ## ARG profile
         with open(f'{self.outfile}.sarg.tsv', 'w') as w:
-            if plasmid:
-                w.write('\t'.join(['lineage', 'type', 'subtype', 'carrier', 'copy', 'genome', 'abundance']) + '\n')
-                for row in sorted(self.profile):
-                    w.write('\t'.join(row[:4] + [f'{row[4]:.3f}', f'{row[5]:.3f}', f'{row[6]:.3f}']) + '\n')
-            else:
-                w.write('\t'.join(['lineage', 'type', 'subtype', 'copy', 'genome', 'abundance']) + '\n')
-                for row in sorted(self.profile):
-                    w.write('\t'.join(row[:3] + [f'{row[4]:.3f}', f'{row[5]:.3f}', f'{row[6]:.3f}']) + '\n')
+            header = ['lineage', 'type', 'subtype', 'copy', 'genome', 'abundance']
+            header = header[:3] + ['carrier'] + header[3:] if plasmid else header
+            w.write('\t'.join(header) + '\n')
+            for row in sorted(self.profile):
+                w.write('\t'.join(row[:3 + plasmid] + [f'{row[col + plasmid]:.3f}' for col in range(3, 6)]) + '\n')
 
         ## read classification
         with open(f'{self.outfile}.sarg.json', 'w') as w:
