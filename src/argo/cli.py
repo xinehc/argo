@@ -177,7 +177,7 @@ def run(opt):
         files = [os.path.basename(file) for file in glob.glob(os.path.join(opt.db, '*'))]
         if (
             'metadata.tsv' not in files or 'sarg.metadata.tsv' not in files
-            or 'prot.dmnd' not in files  or 'sarg.dmnd' not in files
+            or 'prot.dmnd' not in files or 'sarg.dmnd' not in files
             or len([file for file in files if 'nucl.' in file and '.mmi' in file]) != 16
             or len([file for file in files if 'sarg.' in file and '.mmi' in file]) <= 32
         ):
@@ -199,7 +199,7 @@ def run(opt):
         if not opt.skip_melon or any(not os.path.isfile(get_filename(file, opt.output, ext)) for ext in ['.tsv', '.json']):
             GenomeProfiler(file, opt.db, opt.output, opt.threads).run(skip_clean=opt.skip_clean)
         else:
-            logger.info(f'Loading genome copy information ...')
+            logger.info('Loading genome copy information ...')
 
         AntibioticResistanceGeneProfiler(file, opt.db, opt.output, opt.threads).run(
             plasmid=opt.plasmid, skip_clean=opt.skip_clean,
