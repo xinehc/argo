@@ -3,10 +3,9 @@ import os
 import glob
 
 from argparse import ArgumentParser, SUPPRESS
-from . import __version__
 from melon.utils import logger, get_filename
 from melon import GenomeProfiler
-from . import AntibioticResistanceGeneProfiler
+from . import __version__, AntibioticResistanceGeneProfiler
 
 
 def cli(argv=sys.argv):
@@ -87,7 +86,7 @@ def cli(argv=sys.argv):
         metavar='FLOAT',
         type=float,
         default=90,
-        help='Min. subject cover of all HPSs within a read cluster to report alignments. [90]')
+        help='Min. subject cover within a read cluster to report alignments. [90]')
 
     additional.add_argument(
         '-n',

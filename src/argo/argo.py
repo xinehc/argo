@@ -4,7 +4,6 @@ import numpy as np
 
 from collections import defaultdict
 from scipy.sparse import coo_matrix
-
 from melon.utils import *
 from .utils import *
 
