@@ -16,9 +16,9 @@ conda activate argo
 ```
 
 ### Database setup
-Download the database from [Zenodo](https://zenodo.org/records/14172434):
+Download the database from [Zenodo](https://doi.org/10.5281/zenodo.12576527):
 ```bash
-wget -qN --show-progress https://zenodo.org/records/14172434/files/database.tar.gz
+wget -qN --show-progress https://zenodo.org/records/14859758/files/database.tar.gz
 tar -xvf database.tar.gz
 ```
 
@@ -49,7 +49,7 @@ wget -qN --show-progress https://zenodo.org/records/12571849/files/example.fa.gz
 argo example.fa.gz -d database -o . --plasmid
 ```
 
-You should see:
+You should see (Argo v0.2.0 and SARG+ ver. 2025-02-11):
 ```
 INFO: Estimating genome copies ...
 INFO: ... found 27.375 copies of genomes (bacteria: 27.375; archaea: 0).
@@ -59,14 +59,14 @@ INFO: ... found 8 unique species (bacteria: 8; archaea: 0).
 INFO: Overlapping ...
 INFO: ... median sequence divergence: 0.0519 | initial identity cutoff: 0.9 * 77.03.
 INFO: Annotating ARGs ...
-INFO: ... candidate HSPs: 11315 | ARG-containing reads: 632.
+INFO: ... candidate HSPs: 11241 | ARG-containing reads: 632.
 INFO: Overlapping of ARG-containing reads ...
-INFO: ... median sequence divergence of ARG-containing reads: 0.0503 | identity cutoff: 77.41 | low-identity HSPs: 3620.
+INFO: ... median sequence divergence of ARG-containing reads: 0.0503 | identity cutoff: 77.41 | low-identity HSPs: 3565.
 INFO: Assigning taxonomy ...
 INFO: Graph clustering ...
-INFO: ... read clusters: 169 | low-subject-cover HSPs: 524 | overlapping HSPs: 6336 | remaining HSPs: 835
+INFO: ... read clusters: 169 | low-subject-cover HSPs: 532 | overlapping HSPs: 6304 | remaining HSPs: 840
 INFO: Set covering ...
-INFO: ... ARG copies per genome: 27.849 | ARG types: 17 | ARG subtypes: 155 | ARG-carrying species: 8.
+INFO: ... ARG copies per genome: 27.885 | ARG types: 17 | ARG subtypes: 155 | ARG-carrying species: 8.
 INFO: Done.
 ```
 
@@ -79,7 +79,7 @@ lineage                     type            subtype    carrier       copy      g
 ...Staphylococcus aureus    multidrug       norC       chromosome    5.813     3.875     1.500
 ...Staphylococcus aureus    multidrug       sdrM       chromosome    3.996     3.875     1.031
 ...Staphylococcus aureus    tetracycline    tet(38)    chromosome    1.749     3.875     0.451
-...Staphylococcus aureus    tetracycline    tet(L)     plasmid       14.994    3.875     3.869
+...Staphylococcus aureus    tetracycline    tet(L)     plasmid       14.997    3.875     3.879
 ...
 ```
 
@@ -139,7 +139,7 @@ additional arguments:
   -m INT                Max. number of target sequences to report (--max-target-seqs/-k in diamond). [25]
   -e FLOAT              Max. expected value to report alignments (--evalue/-e in diamond). [1e-5]
   -i FLOAT              Min. identity in percentage to report alignments. If "0" then set 90 - 2.5 * 100 * median sequence divergence. [0]
-  -s FLOAT              Min. subject cover of all HPSs within a read cluster to report alignments. [90]
+  -s FLOAT              Min. subject cover within a read cluster to report alignments. [90]
   -n INT                Max. number of secondary alignments to report (-N in minimap2). [2147483647]
   -p FLOAT              Min. secondary-to-primary score ratio to report secondary alignments (-p in minimap2). [0.9]
   -z FLOAT              Min. estimated genome copies of a species to report it ARG copies and abundances. [1]
