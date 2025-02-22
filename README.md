@@ -164,3 +164,6 @@ No, Argo is inherently read-based and does not work with contigs. You may consid
 ### Why is Argo running slowly for certain samples?
 
 The computational time increases not only with the size of the sample but also with the number of ARG-containing reads and the redundancy of the database. If your sample contains a large proportion of *Escherichia coli* (see above), the computational time is likely to be much longer than usual.
+
+## Citation
+Chen, X., Yin, X., Xu, X., & Zhang, T. (2025). Species-resolved profiling of antibiotic resistance genes in complex metagenomes through long-read overlapping with Argo. *Nature Communications*, 16(1), 1744. https://doi.org/10.1038/s41467-025-57088-y
