@@ -4,7 +4,6 @@ Argo: species-resolved profiling of **a**ntibiotic **r**esistance **g**enes in c
 ## Introduction
 Argo is a long-read-based profiler developed for environmental surveillance of antibiotic resistance genes (ARGs) with species-level resolution. It uses minimap2's base-level alignment with GTDB to obtain raw species assignments and consolidates these assignments on a *read cluster* basis (determined through decomposing the read-overlap graph) by solving a set cover problem. Argo takes *quality-controlled* long reads (either Nanopore or PacBio) as input and returns a table listing predicted ARGs (types and subtypes), their potential hosts, and estimated abundances, expressed as *ARG copies per genome* (cpg), which is equivalent to *ARG copies per cell* (cpc), assuming each cell contains a single genome.
 
-
 Argo uses [SARG+](https://github.com/xinehc/sarg-curation) as its default database, which augments experimentally validated sequences with RefSeq sequences that share annotation evidence. However, it also accepts customized databases for compatibility with [NDARO](https://www.ncbi.nlm.nih.gov/pathogens/antimicrobial-resistance/) and [CARD](https://card.mcmaster.ca/). See https://github.com/xinehc/argo-supplementary for more details.
 
 ## Quick Start
@@ -18,7 +17,7 @@ conda activate argo
 ### Database setup
 Download the database from [Zenodo](https://doi.org/10.5281/zenodo.12576527):
 ```bash
-wget -qN --show-progress https://zenodo.org/records/14859758/files/database.tar.gz
+wget -qN --show-progress https://zenodo.org/records/15356208/files/database.tar.gz
 tar -xvf database.tar.gz
 ```
 
@@ -117,40 +116,38 @@ argo *.fa -d database -o . --plasmid -i 80 -s 80
 
 A complete list of arguments and their default values is shown below:
 ```
-usage: argo -d DIR -o DIR [-t INT] [--plasmid] [--skip-melon] [--skip-clean] [-m INT] [-e FLOAT] [-i FLOAT] [-s FLOAT] [-n INT] [-p FLOAT] [-z FLOAT] [-u INT] [-b INT] [-x FLOAT] [-y FLOAT] FILE [FILE ...]
+Usage: argo -d DIR -o DIR [-t INT] [--plasmid] [--skip-melon] [--skip-clean] [-m INT] [-e FLOAT] [-i FLOAT] [-s FLOAT] [-n INT] [-p FLOAT] [-z FLOAT] [-u INT] [-b INT] [-x FLOAT] [-y FLOAT] file [file ...]
 
 Argo: species-resolved profiling of antibiotic resistance genes in complex metagenomes through long-read overlapping
 
-positional arguments:
-  FILE                  Input fasta <*.fa|*.fasta> or fastq <*.fq|*.fastq> file, gzip optional <*.gz>.
+Positional Arguments:
+  file                  Input fasta <*.fa|*.fasta> or fastq <*.fq|*.fastq> file, gzip optional <*.gz>.
 
-required arguments:
-  -d DIR, --db DIR      Unzipped database folder, should contains <prot.fa|sarg.fa>, <nucl.*.fa|sarg.*.fa> and metadata files.
-  -o DIR, --output DIR  Output folder.
+Required Arguments:
+  -d, --db DIR          Unzipped database folder, should contains <prot.fa|sarg.fa>, <nucl.*.fa|sarg.*.fa> and metadata files. (default: None)
+  -o, --output DIR      Output folder. (default: None)
 
-optional arguments:
-  -t INT, --threads INT
-                        Number of threads. [10]
-  --plasmid             List ARGs carried by plasmids.
-  --skip-melon          Skip Melon for genome copy estimation.
-  --skip-clean          Skip cleaning, keep all temporary <*.tmp> files.
+Optional Arguments:
+  -t, --threads INT     Number of threads. [10] (default: 10)
+  --plasmid             List ARGs carried by plasmids. (default: False)
+  --skip-melon          Skip Melon for genome copy estimation. (default: False)
+  --skip-clean          Skip cleaning, keep all temporary <*.tmp> files. (default: False)
 
-additional arguments:
-  -m INT                Max. number of target sequences to report (--max-target-seqs/-k in diamond). [25]
-  -e FLOAT              Max. expected value to report alignments (--evalue/-e in diamond). [1e-5]
-  -i FLOAT              Min. identity in percentage to report alignments. If "0" then set 90 - 2.5 * 100 * median sequence divergence. [0]
-  -s FLOAT              Min. subject cover within a read cluster to report alignments. [90]
-  -n INT                Max. number of secondary alignments to report (-N in minimap2). [2147483647]
-  -p FLOAT              Min. secondary-to-primary score ratio to report secondary alignments (-p in minimap2). [0.9]
-  -z FLOAT              Min. estimated genome copies of a species to report it ARG copies and abundances. [1]
-  -u INT                Max. number of ARG-containing reads per chunk for overlapping. If "0" then use a single chunk. [0]
+Additional Arguments - Filtering:
+  -m INT                Max. number of target sequences to report (--max-target-seqs/-k in diamond). (default: 25)
+  -e FLOAT              Max. expected value to report alignments (--evalue/-e in diamond). (default: 1e-05)
+  -i FLOAT              Min. identity in percentage to report alignments. If "0" then set 90 - 2.5 * 100 * median sequence divergence. (default: 0)
+  -s FLOAT              Min. subject cover within a read cluster to report alignments. (default: 90)
+  -n INT                Max. number of secondary alignments to report (-N in minimap2). (default: 2147483647)
+  -p FLOAT              Min. secondary-to-primary score ratio to report secondary alignments (-p in minimap2). (default: 0.9)
+  -z FLOAT              Min. estimated genome copies of a species to report it ARG copies and abundances. (default: 1)
+  -u INT                Max. number of ARG-containing reads per chunk for overlapping. If "0" then use a single chunk. (default: 0)
 
-additional arguments for MCL:
-  -b INT                Terminal condition - max. iterations. [1000]
-  -x FLOAT              Graph clustering parameter - inflation. [2]
-  -y FLOAT              Graph clustering parameter - expansion. [2]
+Additional Arguments - Graph Clustering:
+  -b INT                Terminal condition - max. iterations. (default: 1000)
+  -x FLOAT              MCL parameter - inflation. (default: 2)
+  -y FLOAT              MCL parameter - expansion. (default: 2)
 ```
-
 
 ## FAQ
 ### Does Argo work with isolates?
@@ -163,7 +160,7 @@ No, Argo is inherently read-based and does not work with contigs. You may consid
 
 ### Why is Argo running slowly for certain samples?
 
-The computational time increases not only with the size of the sample but also with the number of ARG-containing reads and the redundancy of the database. If your sample contains a large proportion of *Escherichia coli* (see above), the computational time is likely to be much longer than usual.
+The computational time increases not only with the size of the sample but also with the number of ARG-containing reads and the redundancy of the database. If your sample contains a large proportion of *Escherichia coli* (see above), the computational time is likely to be longer than usual.
 
 ## Citation
 Chen, X., Yin, X., Xu, X., & Zhang, T. (2025). Species-resolved profiling of antibiotic resistance genes in complex metagenomes through long-read overlapping with Argo. *Nature Communications*, 16(1), 1744. https://doi.org/10.1038/s41467-025-57088-y

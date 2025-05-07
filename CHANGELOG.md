@@ -1,4 +1,9 @@
 # Changelog
+## [0.2.1] - 2025-05-07
+### Added
+- Rich argparse.
+
+
 ## [0.2.0] - 2025-01-12
 ### Changed
 - [***breaking***] Simplify command line interface (`-I` -> `-i`, `-S` -> `-s`), options related genome copy estimation are removed.
