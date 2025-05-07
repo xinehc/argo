@@ -12,6 +12,13 @@ description = "Argo: species-resolved profiling of antibiotic resistance genes i
 license = {file = "LICENSE"}
 dynamic = ["version"]
 requires-python = ">=3.7"
+dependencies = [
+    "tqdm",
+    "scipy",
+    "numpy",
+    "scikit-learn",
+    "rich-argparse",
+]
 
 [project.scripts]
 argo = "argo.cli:cli"
