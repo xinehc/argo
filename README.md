@@ -8,6 +8,9 @@ Argo uses [SARG+](https://github.com/xinehc/sarg-curation) as its default databa
 
 ## Quick Start
 ### Installation
+<a href="https://anaconda.org/bioconda/argo"> <img src="https://anaconda.org/bioconda/argo/badges/version.svg" /></a>
+<a href="https://anaconda.org/bioconda/argo"> <img src="https://anaconda.org/bioconda/argo/badges/latest_release_date.svg" /></a>
+
 Create a new conda environment and install:
 ```bash
 conda create -n argo -c bioconda -c conda-forge argo
