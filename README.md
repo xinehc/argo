@@ -4,7 +4,7 @@ Argo: species-resolved profiling of **a**ntibiotic **r**esistance **g**enes in c
 ## Introduction
 Argo is a long-read-based profiler developed for environmental surveillance of antibiotic resistance genes (ARGs) with species-level resolution. It uses minimap2's base-level alignment with GTDB to obtain raw species assignments and consolidates these assignments on a *read cluster* basis (determined through decomposing the read-overlap graph) by solving a set cover problem. Argo takes *quality-controlled* long reads (either Nanopore or PacBio) as input and returns a table listing predicted ARGs (types and subtypes), their potential hosts, and estimated abundances, expressed as *ARG copies per genome* (cpg), which is equivalent to *ARG copies per cell* (cpc), assuming each cell contains a single genome.
 
-Argo uses [SARG+](https://github.com/xinehc/sarg-curation) as its default database, which augments experimentally validated sequences with RefSeq sequences that share annotation evidence. However, it also accepts customized databases for compatibility with [NDARO](https://www.ncbi.nlm.nih.gov/pathogens/antimicrobial-resistance/) and [CARD](https://card.mcmaster.ca/). See https://github.com/xinehc/argo-supplementary for more details.
+Argo uses [SARG+](https://github.com/xinehc/sarg-curation) as its default database, which augments experimentally validated sequences with RefSeq sequences that share annotation evidence. See https://github.com/xinehc/argo-supplementary for more details on database construction.
 
 ## Quick Start
 ### Installation
@@ -20,7 +20,7 @@ conda activate argo
 ### Database setup
 Download the database from [Zenodo](https://doi.org/10.5281/zenodo.12576527):
 ```bash
-wget -qN --show-progress https://zenodo.org/records/15356208/files/database.tar.gz
+wget -qN --show-progress https://zenodo.org/records/20451539/files/database.tar.gz
 tar -xvf database.tar.gz
 ```
 
@@ -51,24 +51,24 @@ wget -qN --show-progress https://zenodo.org/records/12571849/files/example.fa.gz
 argo example.fa.gz -d database -o . --plasmid
 ```
 
-You should see (Argo v0.2.0 and SARG+ ver. 2025-02-11):
-```
+You should see (Argo v0.2.1 and SARG+ ver. 2026-05-25):
+```text
 INFO: Estimating genome copies ...
-INFO: ... found 27.375 copies of genomes (bacteria: 27.375; archaea: 0).
+INFO: ... found 27.75 copies of genomes (bacteria: 27.75; archaea: 0).
 INFO: Assigning taxonomy ...
-INFO: Reassigning taxonomy ...
+INFO: Reassigning taxonomy ...                                                                                      
 INFO: ... found 8 unique species (bacteria: 8; archaea: 0).
 INFO: Overlapping ...
 INFO: ... median sequence divergence: 0.0519 | initial identity cutoff: 0.9 * 77.03.
 INFO: Annotating ARGs ...
-INFO: ... candidate HSPs: 11241 | ARG-containing reads: 632.
+INFO: ... candidate HSPs: 10000 | ARG-containing reads: 579.
 INFO: Overlapping of ARG-containing reads ...
-INFO: ... median sequence divergence of ARG-containing reads: 0.0503 | identity cutoff: 77.41 | low-identity HSPs: 3565.
+INFO: ... median sequence divergence of ARG-containing reads: 0.0502 | identity cutoff: 77.45 | low-identity HSPs: 3129.
 INFO: Assigning taxonomy ...
-INFO: Graph clustering ...
-INFO: ... read clusters: 169 | low-subject-cover HSPs: 532 | overlapping HSPs: 6304 | remaining HSPs: 840
+INFO: Graph clustering ...                                                                                          
+INFO: ... read clusters: 149 | low-subject-cover HSPs: 509 | overlapping HSPs: 5607 | remaining HSPs: 755
 INFO: Set covering ...
-INFO: ... ARG copies per genome: 27.885 | ARG types: 17 | ARG subtypes: 155 | ARG-carrying species: 8.
+INFO: ... ARG copies per genome: 24.478 | ARG types: 13 | ARG subtypes: 134 | ARG-carrying species: 8.
 INFO: Done.
 ```
 
@@ -76,12 +76,12 @@ Output file `example.sarg.tsv` lists ARG abundance estimates (cpg) by species:
 ```text
 lineage                     type            subtype    carrier       copy      genome    abundance
 ...
-...Staphylococcus aureus    multidrug       norA       chromosome    4.495     3.875     1.160
-...Staphylococcus aureus    multidrug       norB       chromosome    4.380     3.875     1.130
-...Staphylococcus aureus    multidrug       norC       chromosome    5.813     3.875     1.500
-...Staphylococcus aureus    multidrug       sdrM       chromosome    3.996     3.875     1.031
-...Staphylococcus aureus    tetracycline    tet(38)    chromosome    1.749     3.875     0.451
-...Staphylococcus aureus    tetracycline    tet(L)     plasmid       14.997    3.875     3.879
+...Staphylococcus aureus    multidrug       norA       chromosome    4.495     4.125     1.090
+...Staphylococcus aureus    multidrug       norB       chromosome    4.380     4.125     1.062
+...Staphylococcus aureus    multidrug       norC       chromosome    5.812     4.125     1.409
+...Staphylococcus aureus    multidrug       sdrM       chromosome    3.996     4.125     0.969
+...Staphylococcus aureus    tetracycline    tet(38)    chromosome    1.749     4.125     0.424
+...Staphylococcus aureus    tetracycline    tet(L)     plasmid       15.010    4.125     3.639
 ...
 ```
 
