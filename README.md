@@ -26,7 +26,7 @@ tar -xvf database.tar.gz
 
 Index the files:
 ```bash
-## If you encounter memory issue, consider manually lowering cpu_count or setting cpu_count=1
+## if you encounter memory issue consider manually lowering cpu_count or setting cpu_count=1
 cpu_count=$(python -c 'import os; print(os.cpu_count())')
 
 diamond makedb --in database/prot.fa --db database/prot --quiet
