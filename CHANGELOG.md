@@ -1,4 +1,9 @@
 # Changelog
+## [0.2.2] - 2026-07-30
+### Fixed
+- Fix a bug that causes errors when no overlapping reads are found.
+
+
 ## [0.2.1] - 2025-05-07
 ### Added
 - Rich argparse.

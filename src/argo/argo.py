@@ -255,7 +255,7 @@ class AntibioticResistanceGeneProfiler:
                         row, col = col, row
                     identities[(row, col)] = max(1 - overlap[-1], identities.get((row, col), 0))
 
-        rows, cols = zip(*list(identities.keys()))
+        rows, cols = zip(*identities.keys()) if identities else ((), ())
         matrix = coo_matrix((list(identities.values()) * 2, (rows + cols, cols + rows)), shape=(len(nodes), len(nodes)))
         del self.overlaps, identities
 
