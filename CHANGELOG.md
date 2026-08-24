@@ -1,4 +1,9 @@
 # Changelog
+## [0.2.3] - 2026-08-24
+### Changed
+- Log now includes ARG types/subtypes of unclassified species.
+
+
 ## [0.2.2] - 2026-07-30
 ### Fixed
 - Fix a bug that causes errors when no overlapping reads are found.

@@ -51,7 +51,7 @@ wget -qN --show-progress https://zenodo.org/records/12571849/files/example.fa.gz
 argo example.fa.gz -d database -o . --plasmid
 ```
 
-You should see (Argo v0.2.1 and SARG+ ver. 2026-05-25):
+You should see (Argo v0.2.3 and SARG+ ver. 2026-05-25):
 ```text
 INFO: Estimating genome copies ...
 INFO: ... found 27.75 copies of genomes (bacteria: 27.75; archaea: 0).
@@ -68,7 +68,7 @@ INFO: Assigning taxonomy ...
 INFO: Graph clustering ...                                                                                          
 INFO: ... read clusters: 149 | low-subject-cover HSPs: 509 | overlapping HSPs: 5607 | remaining HSPs: 755
 INFO: Set covering ...
-INFO: ... ARG copies per genome: 24.478 | ARG types: 13 | ARG subtypes: 134 | ARG-carrying species: 8.
+INFO: ... ARG copies per genome: 24.478 | ARG types: 14 | ARG subtypes: 138 | ARG-carrying species: 8.
 INFO: Done.
 ```
 

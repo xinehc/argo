@@ -447,8 +447,8 @@ class AntibioticResistanceGeneProfiler:
         with open(f'{self.outfile}.sarg.json', 'w') as w:
             json.dump(dict(sorted(reads.items())), w, indent=4)
 
-        ntypes = len({row[1] for row in self.profile if row[0] != 'unclassified'})
-        nsubtypes = len({row[2] for row in self.profile if row[0] != 'unclassified'})
+        ntypes = len({row[1] for row in self.profile})
+        nsubtypes = len({row[2] for row in self.profile})
         nlineages = len({row[0] for row in self.profile if row[0] != 'unclassified'})
         abundance = sum(lineage2copy.values()) / sum(self.lineage2genome.values())
 
